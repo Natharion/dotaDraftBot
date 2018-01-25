@@ -37,3 +37,5 @@ class DOTA_Heroes:
 
 if __name__ == "__main__":
 	DOTA_Heroes = DOTA_Heroes()
+
+	kutas

@@ -1,1 +1,1 @@
-# synderBot
+# dotaDraftBot

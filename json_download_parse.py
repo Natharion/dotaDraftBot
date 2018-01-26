@@ -8,9 +8,13 @@ import pprint
 import sys
 
 def GetFileName(match_id):
-	match_file_name = match_id + '.json'
+	match_file_name = str(match_id) + '.json'
 	return match_file_name
 
+def GetBatchName(batch_number):
+	batch_name = 'match_batch_' + str(batch_number) + '.json'
+	return batch_name
+	
 def DownloadMatchData(match_id, verify=True):
 	match_file_name = GetFileName(match_id)
 	download = True
@@ -21,14 +25,17 @@ def DownloadMatchData(match_id, verify=True):
 	if download is True:
 		url = 'https://api.opendota.com/api/matches/'
 		full_url = url + match_id
+		work_dir = os.path.dirname(os.path.abspath(__file__))
+		save_folder = os.path.join(work_dir, 'match_Data')
 		with urllib.request.urlopen(full_url) as url_stream, \
 			open(match_file_name, 'wb') as download_file:
 				shutil.copyfileobj(url_stream, download_file)
+				shutil.copy(match_file_name, save_folder)
 		time.sleep(0.5)
 
 
 def ParseMatchData(match_id):
-	with open(GetFileName(match_id), encoding="utf8") as data_file:    
+	with open(GetFileName(match_id), encoding="utf8") as data_file:
 		data = json.load(data_file)
 	return data
 
@@ -58,6 +65,35 @@ def PatchVerification(pro_match_batch, patch):
 		
 	return (oldest_match_id, continue_downloading)
 	
+def GetProMatches(patch):
+	match_id_list = []
+	start_url = 'https://api.opendota.com/api/proMatches'
+	batch_number = 0
+	batch_name = GetBatchName(batch_number)
+	with urllib.request.urlopen(start_url) as url_stream, \
+			open(batch_name, 'wb') as download_file:
+				shutil.copyfileobj(url_stream, download_file)
+	PatchVerification(batch_name, patch)
+	with open(batch_name, encoding="utf-8") as data_file:
+		pro_match_data = json.load(data_file)
+	for i in range(0,100):
+		match_id_list.append(DownloadAndParse(str(pro_match_data[i]['match_id'])))
+	
+	# if continue_downloading = True:
+		# batch_number += 1
+		# url = 'https://api.opendota.com/api/proMatches?less_than_match_id' + str(oldest_match_id)
+		# batch_name = GetBatchName(batch_number)
+		# with urllib.request.urlopen(url) as url_stream, \
+			# open(batch_name, 'wb') as download_file:
+				# shutil.copyfileobj(url_stream, download_file)
+			
+		
+	
+	
+	
+	return match_id_list
+	
+	
 def GetPickListByMatchID(match_id):
 	RadiantPicks = []
 	DirePicks = []
@@ -69,15 +105,17 @@ def GetPickListByMatchID(match_id):
 	
 	return DOTA_Heroes.GeneratePickList(RadiantPicks, DirePicks)
 	
+	
 if __name__ == '__main__':
-	DOTA_Heroes = heroes.DOTA_Heroes()
-
-                    
-        
-
+	X = GetProMatches(26)
+	print(X)
+		
 
 
 
 
 
-        
+
+
+
+

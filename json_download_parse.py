@@ -14,27 +14,26 @@ def GetFileName(match_id):
 	return match_file_name
 
 def GetBatchName(batch_number):
-	batch_name = 'match_batch_' + str(batch_number) + '.json'
+	work_dir = os.path.dirname(os.path.abspath(__file__))
+	save_folder = os.path.join(work_dir, 'batch_data\\')
+	batch_name = os.path.join(save_folder, 'match_batch_' + str(batch_number) + '.json')
 	return batch_name
 	
 def DownloadMatchData(match_id, verify=True):
 	match_file_name = GetFileName(match_id)
-	download = True
 	if not hasattr(DownloadMatchData, "LastDownload"):
 		DownloadMatchData.LastDownload = time.clock()
 	if verify is True:
 		if os.path.isfile(match_file_name) is True:
-			download = False
 			return False
-	if download is True:
-		time.sleep((DownloadMatchData.LastDownload+0.5)-time.clock())
-		url = 'https://api.opendota.com/api/matches/'
-		full_url = url + match_id
-		with urllib.request.urlopen(full_url) as url_stream, \
-			open(match_file_name, 'wb') as download_file:
-				shutil.copyfileobj(url_stream, download_file)
-		DownloadMatchData.LastDownload = time.clock()
-		return True
+	time.sleep(max((DownloadMatchData.LastDownload+0.5)-time.clock(),0))
+	url = 'https://api.opendota.com/api/matches/'
+	full_url = url + match_id
+	with urllib.request.urlopen(full_url) as url_stream, \
+		open(match_file_name, 'wb') as download_file:
+			shutil.copyfileobj(url_stream, download_file)
+	DownloadMatchData.LastDownload = time.clock()
+	return True
 
 def ParseMatchData(match_id):
 	with open(GetFileName(match_id), encoding="utf8") as data_file:

@@ -95,17 +95,7 @@ def GetProMatches(patch):
 	return match_id_list
 	
 	
-def GetPickListByMatchID(match_id):
-	RadiantPicks = []
-	DirePicks = []
-	MatchData = DownloadAndParse(match_id)
-	for i in range(0,5):
-		RadiantPicks.append(MatchData['players'][i]['hero_id'])
-	for i in range(5,10):
-		DirePicks.append(MatchData['players'][i]['hero_id'])
-	
-	return DOTA_Heroes.GeneratePickList(RadiantPicks, DirePicks)
-	
+
 	
 if __name__ == '__main__':
 	X = GetProMatches(26)

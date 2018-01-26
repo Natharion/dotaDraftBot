@@ -4,14 +4,27 @@ import csv
 
 class CSV_Generator():
 	GameList = []
-	PickList = []
-	Scores = []
+	PickList = [] #Picks+result
+	Scores = [] #just results
+	Header = []
 	
 	def __init__(self):
 		self.GetGameList()
 		self.GetGames()
 		self.ParseGames()
+		self.GenerateHeader()
 		
+	def GenerateHeader(self):
+		self.Header.append(len(self.PickList))
+		self.Header.append(len(self.PickList[1]))
+			
+	def SaveToDisk(self, FileName):
+		with open(FileName, 'w', newline='', encoding="utf-8") as CSV_File:
+			CSV_Writer = csv.writer(CSV_File, dialect='excel')
+			CSV_Writer.writerow(self.Header)
+			for k in range(0,len(self.PickList)):
+				CSV_Writer.writerow(self.PickList[k])
+	
 	def GetGameList(self):
 		my_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'match_data')
 		for (dirpath, dirnames, filenames) in os.walk(my_path):
@@ -34,13 +47,16 @@ class CSV_Generator():
 				Temp[self.GameList[k]['players'][i]['hero_id']] = 0
 			for i in range(5,10):
 				Temp[self.GameList[k]['players'][i]['hero_id']] = 1
-			self.PickList.append(Temp)
+			
 			
 			if self.GameList[k]['radiant_win'] is True:
 				self.Scores.append(0)
+				Temp.append(0)
 			else:
 				self.Scores.append(1)
+				Temp.append(1)
+			self.PickList.append(Temp)
+			
 if __name__ == '__main__':
 	CSV_Generator = CSV_Generator()
-	for k in range(0,len(CSV_Generator.PickList)):
-		print('Match ID: ' + str(CSV_Generator.GameList[k]['match_id']) + ' / Dire Win:' + str(CSV_Generator.Scores[k]))
+	CSV_Generator.SaveToDisk('scores.csv')

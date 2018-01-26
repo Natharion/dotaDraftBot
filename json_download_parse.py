@@ -8,7 +8,9 @@ import pprint
 import sys
 
 def GetFileName(match_id):
-	match_file_name = str(match_id) + '.json'
+	work_dir = os.path.dirname(os.path.abspath(__file__))
+	save_folder = os.path.join(work_dir, 'match_data\\')
+	match_file_name = os.path.join(save_folder, str(match_id) + '.json')
 	return match_file_name
 
 def GetBatchName(batch_number):
@@ -18,21 +20,21 @@ def GetBatchName(batch_number):
 def DownloadMatchData(match_id, verify=True):
 	match_file_name = GetFileName(match_id)
 	download = True
+	if not hasattr(DownloadMatchData, "LastDownload"):
+		DownloadMatchData.LastDownload = time.clock()
 	if verify is True:
 		if os.path.isfile(match_file_name) is True:
 			download = False
-		
+			return False
 	if download is True:
+		time.sleep((DownloadMatchData.LastDownload+0.5)-time.clock())
 		url = 'https://api.opendota.com/api/matches/'
 		full_url = url + match_id
-		work_dir = os.path.dirname(os.path.abspath(__file__))
-		save_folder = os.path.join(work_dir, 'match_Data')
 		with urllib.request.urlopen(full_url) as url_stream, \
 			open(match_file_name, 'wb') as download_file:
 				shutil.copyfileobj(url_stream, download_file)
-				shutil.copy(match_file_name, save_folder)
-		time.sleep(0.5)
-
+		DownloadMatchData.LastDownload = time.clock()
+		return True
 
 def ParseMatchData(match_id):
 	with open(GetFileName(match_id), encoding="utf8") as data_file:
@@ -108,7 +110,8 @@ def GetPickListByMatchID(match_id):
 	
 if __name__ == '__main__':
 	X = GetProMatches(26)
-	print(X)
+	
+	print(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'match_Data\\'))
 		
 
 

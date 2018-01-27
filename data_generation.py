@@ -7,24 +7,25 @@ class CSV_Generator():
 	PickList = [] #Picks+result
 	Scores = [] #just results
 	Header = []
+	VerificationRatio = 0.0
 	
-	def __init__(self):
+	def __init__(self, ratio=0.2):
 		self.GetGameList()
 		self.GetGames()
-		self.ParseGames()
 		self.GenerateHeader()
+		VerificationRatio = ratio
 		
 	def GenerateHeader(self):
 		self.Header.append(len(self.PickList))
 		self.Header.append(len(self.PickList[1]))
 			
-	def SaveToDisk(self, FileName):
-		with open(FileName, 'w', newline='', encoding="utf-8") as CSV_File:
+	def SaveToDisk(self, TrainingDataFile):
+		with open(TrainingDataFile, 'w', newline='', encoding="utf-8") as CSV_File:
 			CSV_Writer = csv.writer(CSV_File, dialect='excel')
 			CSV_Writer.writerow(self.Header)
 			for k in range(0,len(self.PickList)):
 				CSV_Writer.writerow(self.PickList[k])
-	
+				
 	def GetGameList(self):
 		my_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'match_data')
 		for (dirpath, dirnames, filenames) in os.walk(my_path):
@@ -36,26 +37,24 @@ class CSV_Generator():
 
 	def GetGames(self):
 		for k in range(0,len(self.GameList)):
-			self.GameList[k] = json_download_parse.ParseMatchData(self.GameList[k])
-	
-	def ParseGames(self):
-		for k in range(0,len(self.GameList)):
+			GameBeingParsed = json_download_parse.ParseMatchData(self.GameList[k])
 			Temp = []
 			for i in range(0,127):
 				Temp.append(0.5)
 			for i in range(0,5):
-				Temp[self.GameList[k]['players'][i]['hero_id']] = 0
+				Temp[GameBeingParsed['players'][i]['hero_id']] = 0
 			for i in range(5,10):
-				Temp[self.GameList[k]['players'][i]['hero_id']] = 1
+				Temp[GameBeingParsed['players'][i]['hero_id']] = 1
 			
 			
-			if self.GameList[k]['radiant_win'] is True:
+			if GameBeingParsed['radiant_win'] is True:
 				self.Scores.append(0)
 				Temp.append(0)
 			else:
 				self.Scores.append(1)
 				Temp.append(1)
 			self.PickList.append(Temp)
+			
 			
 if __name__ == '__main__':
 	CSV_Generator = CSV_Generator()

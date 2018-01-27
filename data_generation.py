@@ -4,27 +4,38 @@ import csv
 
 class CSV_Generator():
 	GameList = []
-	PickList = [] #Picks+result
+	PickListLearning = [] #Picks+result
+	PickListVerification = [] #Picks+result
 	Scores = [] #just results
-	Header = []
-	VerificationRatio = 0.0
+	HeaderLearning = []
+	HeaderVerification = []
+	Verification = 0 # 1 in k games will be verification game
 	
-	def __init__(self, ratio=0.2):
+	def __init__(self, Verif=10):
 		self.GetGameList()
+		if int(Verif <= 1):
+			Verif = 1
+		self.Verification = Verif
 		self.GetGames()
 		self.GenerateHeader()
-		VerificationRatio = ratio
 		
 	def GenerateHeader(self):
-		self.Header.append(len(self.PickList))
-		self.Header.append(len(self.PickList[1]))
-			
-	def SaveToDisk(self, TrainingDataFile):
+		self.HeaderLearning.append(len(self.PickListLearning))
+		self.HeaderLearning.append(len(self.PickListLearning[1]))
+		self.HeaderVerification.append(len(self.PickListVerification))
+		self.HeaderVerification.append(len(self.PickListVerification[1]))
+		
+	def SaveToDisk(self, TrainingDataFile='learning.csv', VerificationDataFile='verification.csv'):
 		with open(TrainingDataFile, 'w', newline='', encoding="utf-8") as CSV_File:
 			CSV_Writer = csv.writer(CSV_File, dialect='excel')
-			CSV_Writer.writerow(self.Header)
-			for k in range(0,len(self.PickList)):
-				CSV_Writer.writerow(self.PickList[k])
+			CSV_Writer.writerow(self.HeaderLearning)
+			for k in range(0,len(self.PickListLearning)):
+				CSV_Writer.writerow(self.PickListLearning[k])
+		with open(VerificationDataFile, 'w', newline='', encoding="utf-8") as CSV_File:
+			CSV_Writer = csv.writer(CSV_File, dialect='excel')
+			CSV_Writer.writerow(self.HeaderVerification)
+			for k in range(0,len(self.PickListVerification)):
+				CSV_Writer.writerow(self.PickListVerification[k])
 				
 	def GetGameList(self):
 		my_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'match_data')
@@ -53,9 +64,12 @@ class CSV_Generator():
 			else:
 				self.Scores.append(1)
 				Temp.append(1)
-			self.PickList.append(Temp)
+			if (k % self.Verification) == 0:
+				self.PickListVerification.append(Temp)
+			else:
+				self.PickListLearning.append(Temp)
 			
 			
 if __name__ == '__main__':
 	CSV_Generator = CSV_Generator()
-	CSV_Generator.SaveToDisk('scores.csv')
+	CSV_Generator.SaveToDisk('learning.csv', 'verification.csv')

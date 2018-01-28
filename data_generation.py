@@ -1,6 +1,8 @@
 import json_download_parse
 import os
 import csv
+import operator
+import json
 
 class CSV_Generator():
 	GameList = []
@@ -12,12 +14,9 @@ class CSV_Generator():
 	Verification = 0 # 1 in k games will be verification game
 	
 	def __init__(self, Verif=10):
-		self.GetGameList()
 		if int(Verif <= 1):
 			Verif = 1
 		self.Verification = Verif
-		self.GetGames()
-		self.GenerateHeader()
 		
 	def GenerateHeader(self):
 		self.HeaderLearning.append(len(self.PickListLearning))
@@ -37,7 +36,7 @@ class CSV_Generator():
 			for k in range(0,len(self.PickListVerification)):
 				CSV_Writer.writerow(self.PickListVerification[k])
 				
-	def GetGameList(self):
+	def GetProGameList(self):
 		my_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'match_data')
 		for (dirpath, dirnames, filenames) in os.walk(my_path):
 			self.GameList.extend(filenames)
@@ -46,7 +45,7 @@ class CSV_Generator():
 			self.GameList[k] = self.GameList[k].replace('.json','')
 			self.GameList[k] = int(self.GameList[k])
 
-	def GetGames(self):
+	def GetProGames(self):
 		for k in range(0,len(self.GameList)):
 			GameBeingParsed = json_download_parse.ParseMatchData(self.GameList[k])
 			Temp = []
@@ -56,8 +55,6 @@ class CSV_Generator():
 				Temp[GameBeingParsed['players'][i]['hero_id']] = 0
 			for i in range(5,10):
 				Temp[GameBeingParsed['players'][i]['hero_id']] = 1
-			
-			
 			if GameBeingParsed['radiant_win'] is True:
 				self.Scores.append(0)
 				Temp.append(0)
@@ -68,8 +65,45 @@ class CSV_Generator():
 				self.PickListVerification.append(Temp)
 			else:
 				self.PickListLearning.append(Temp)
-			
-			
+	
+	def GetPubGameList(self, gamecount=250000):
+		my_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'pub_batch_data')
+		BatchList = []
+		for (dirpath, dirnames, filenames) in os.walk(my_path):
+			BatchList.extend(filenames)
+			break
+		for k in range(0, len(BatchList)):
+			with open('pub_batch_data\\' + BatchList[k], encoding="utf8") as data_file:
+				data = json.load(data_file)
+				for a in range(0,100):
+					self.GameList.append(data[a])
+		for k in range(0, len(self.GameList)): #error checking, because shit happens and tends to crash
+			if self.GameList[k]['avg_mmr'] is None: 
+				self.GameList[k]['avg_mmr'] = 1 #games with no mmr are treated as if they had mmr of 1
+		self.GameList.sort(key=lambda k: k['avg_mmr'], reverse=True)
+		for k in range(0, min(len(self.GameList),gamecount)):
+			Temp = []
+			for i in range(0,127):
+				Temp.append(0.5)
+			RadiantPicks = self.GameList[k]['radiant_team'].split(',')
+			DirePicks = self.GameList[k]['dire_team'].split(',')
+			for i in range(0,len(RadiantPicks)):
+				Temp[int(RadiantPicks[i])] = 0
+			for i in range(0,len(DirePicks)):
+				Temp[int(DirePicks[i])] = 0
+			if self.GameList[k]['radiant_win'] is True:
+				self.Scores.append(0)
+				Temp.append(0)
+			else:
+				self.Scores.append(1)
+				Temp.append(1)
+			if (k % self.Verification) == 0:
+				self.PickListVerification.append(Temp)
+			else:
+				self.PickListLearning.append(Temp)
+	
 if __name__ == '__main__':
-	CSV_Generator = CSV_Generator()
+	CSV_Generator = CSV_Generator(30)
+	CSV_Generator.GetPubGameList(gamecount=50000)
+	CSV_Generator.GenerateHeader()
 	CSV_Generator.SaveToDisk('learning.csv', 'verification.csv')

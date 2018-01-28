@@ -1,2 +1,5 @@
 *.json
 __pycache__/
+pub_batch_data.zip
+verification.csv
+learning.csv

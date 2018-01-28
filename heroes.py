@@ -1,6 +1,7 @@
 import csv
 import collections
 import os
+import json
 
 class DOTA_Heroes:
 	Hero = collections.OrderedDict()

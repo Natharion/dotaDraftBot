@@ -18,7 +18,7 @@ class dotaDraftBot:
 	FEATURE_COLUMNS = []
 	
 	BATCH_SIZE = 100
-	TRAIN_STEPS = 1000
+	TRAIN_STEPS = 2000
 	
 	def __init__(self): #WORKS
 		self.generate_column_names()
@@ -58,12 +58,12 @@ class dotaDraftBot:
 		for key in self.train_features.keys():
 			self.FEATURE_COLUMNS.append(tf.feature_column.numeric_column(key=key))
 		self.classifier = tf.estimator.DNNClassifier(
-		feature_columns=self.FEATURE_COLUMNS, hidden_units=[10, 15, 20, 15, 10], n_classes=2)
+		feature_columns=self.FEATURE_COLUMNS, hidden_units=[25, 20, 20, 15], n_classes=2)
 		time.clock()
 	
 	def train_input_fn(self, features, labels, batch_size=100):
 		dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
-		dataset = dataset.repeat().batch(self.BATCH_SIZE)
+		dataset = dataset.shuffle(45000).repeat().batch(self.BATCH_SIZE)
 		print('Data preparation complete at: ' + str(time.clock()))
 		return dataset.make_one_shot_iterator().get_next()
 	
@@ -74,14 +74,9 @@ class dotaDraftBot:
 		else:
 			inputs = (features, labels)
 
-		# Convert the inputs to a Dataset.
 		dataset = tf.data.Dataset.from_tensor_slices(inputs)
-
-		# Batch the examples
 		assert batch_size is not None, "batch_size must not be None"
 		dataset = dataset.batch(batch_size)
-
-		# Return the read end of the pipeline.
 		return dataset.make_one_shot_iterator().get_next()
 	
 	def train(self):

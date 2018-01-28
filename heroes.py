@@ -9,9 +9,8 @@ class DOTA_Heroes:
 			with open('heroes.csv', newline='') as csvfile:
 				HeroesReader = csv.DictReader(csvfile, delimiter=';')
 				for row in HeroesReader:
-					if row['HeroID'] != 'Unused':
-						self.Hero[int(row['HeroID'])] = row['Name']
-						self.Hero[row['Name']] = int(row['HeroID'])
+					self.Hero[int(row['HeroID'])] = row['Name']
+					self.Hero[row['Name']] = int(row['HeroID'])
 
 	def InterpretValue(self, Value):
 		if Value == 0.5:
